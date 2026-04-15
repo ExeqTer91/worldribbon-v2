@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.egg-info/
+outputs/worldribbon_v2/cache.json
+/home/runner/mne_data/
