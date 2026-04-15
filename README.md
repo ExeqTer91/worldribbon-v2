@@ -1,138 +1,132 @@
-# Worldribbon v2 — Within-Subject PCI Re-Analysis
+# Worldribbon: Within-Subject PCI Analysis (PhysioNet EEGBCI)
 
-**PhysioNet EEGBCI · Eyes-Closed Rest vs Motor Execution · N = 98**
-
-Replication and extension of the within-subject Phi Coupling Index (PCI)
-analysis from Ursachi (2026), testing the prediction that phi-organization
-decreases during motor engagement.
-
----
-
-## Prediction
-
-> **PCI_rest > PCI_task** — phi-organization, quantified as proximity of the
-> alpha/theta frequency ratio to φ = 1.618…, should be higher at rest than
-> during motor execution.
+Re-analysis of PhysioNet EEG Motor Imagery dataset (N=109) using a within-subject 
+Phi-Convergence Index (PCI) design. Theta–alpha spectral centroid ratios are compared 
+between **eyes-closed rest** and **motor execution** to test whether EEG resting states 
+show greater phi-organisation (α/θ centroid ratio closer to φ=1.618).
 
 ---
 
-## Result: SUPPORTED
+## Version History
 
-| | Eyes-Closed Rest | Motor Execution |
-|---|---|---|
-| Mean PCI | **1.082 ± 1.255** | **0.640 ± 1.254** |
-| ΔPCI | +0.442 ± 1.347 | |
-| Mean α/θ ratio | 1.686 ± 0.134 | 1.740 ± 0.120 |
-| Phi-organized (PCI > 0) | 79.6% (78/98) | 71.4% (70/98) |
+### v3 (Current) — Full-Spectrum Pipeline with ANCOVA
+**N = 41 valid subjects** (±150 µV threshold after average re-reference, ≥5 clean epochs)
 
-**Paired t(97) = 3.248, p = 0.0016**  
-**Wilcoxon W = 1574, p = 0.0026**  
-**Cohen's d = 0.328 (paired)**  
-60/98 subjects (61.2%) showed PCI_rest > PCI_task.
+| Metric | Value |
+|--------|-------|
+| t(40) | **6.862** |
+| p-value | **2.92 × 10⁻⁸** |
+| Cohen's d | **1.072** |
+| Direction | **85.4%** PCI_rest > PCI_task |
+| Ratio rest | 1.696 |
+| Ratio task | 1.821 |
+| VERDICT | **SUPPORTED** (raw) |
+
+**Critical methodological controls:**
+
+| Control | Result |
+|---------|--------|
+| ANCOVA (baseline-controlled) | t≈0, p≈1.0 — **NOT significant** |
+| FOOOF-corrected (N=39) | t=1.20, p=0.236, d=0.193 — not significant |
+| Flat-spectrum null model | 97.6% outside 1/f CI (rest ratio ≠ pure aperiodic) |
+| Frontal replication | d=0.753, p=2.1×10⁻⁵ — significant |
+| Winsorized robustness | t=7.31, p=7.0×10⁻⁹ — robust |
+| Imagery vs Execution | d=0.496, p=0.004 — condition-specific |
+| Eyes-open vs EC rest | d=0.629, p=0.004 |
+
+**Key finding:** The raw PCI effect (d=1.072) is entirely accounted for by 
+regression-to-mean (baseline PCI → ΔPCI correlation: r=0.563). After ANCOVA, 
+the effect vanishes (p=1.0). FOOOF-corrected analysis (removing aperiodic 1/f 
+component) also shows no significant effect (p=0.236). However, 97.6% of subjects 
+show rest spectral ratios outside the 1/f null model CI, suggesting genuine spectral 
+organisation that differs from purely aperiodic noise.
+
+**Pipeline improvements over v2:**
+1. Average reference before artifact rejection
+2. ±150 µV threshold on re-referenced data (v2: ±500 µV raw)
+3. MIN_EPOCHS = 5 per condition
+4. FOOOF aperiodic correction (fooof 1.1 / specparam)
+5. ε=0.01 regularized PCI
+6. Flat-spectrum null model (200 surrogates)
+7. ANCOVA regression-to-mean control
+
+**Figures:**
+- `fig1_primary`: Primary PCI comparison (rest vs task) with violin/raincloud plots
+- `fig2_fooof`: FOOOF-corrected PCI comparison
+- `fig3_null`: Flat-spectrum null model with individual data points
+- `fig4_frontal`: Frontal electrode replication
 
 ---
 
-## Secondary Analyses
+### v2 — Initial Replication
+**N = 98 valid subjects** (±500 µV threshold, no re-referencing)
 
-| Comparison | N | t | p | d |
-|---|---|---|---|---|
-| Motor execution vs imagery | 97 | -1.64 | 0.104 | -0.167 |
-| Eyes-open vs eyes-closed rest | 96 | -2.75 | 0.007 | -0.280 |
-| Frontal replication (rest vs exec) | 98 | 7.24 | 1.07e-10 | 0.731 |
-
-The frontal channel replication (F3/F4/Fz/Fp1/Fp2/F7/F8) shows a markedly
-stronger effect (d = 0.731) than posterior channels, consistent with frontal
-theta's established role in phi-organization (Ursachi, 2026).
-
-The eyes-open vs eyes-closed rest comparison confirms that EC rest yields
-higher PCI than EO rest (0.692 vs 1.084, p = 0.007), consistent with the
-alpha-dependent nature of phi-organization.
-
-**Note on regression-to-mean:** Baseline PCI vs ΔPCI: r = 0.538,
-p = 1.15e-08. Subjects with higher rest PCI show larger task-induced
-decreases, indicating regression-to-mean partially contributes to the
-observed effect.
-
----
-
-## Metric Definitions
-
-```
-R       = f_alpha / f_theta      (alpha/theta frequency ratio)
-PCI     = log(|R − 2.0| / |R − 1.618...|)
-          PCI > 0: closer to phi (phi-organized)
-          PCI < 0: closer to harmonic 2:1
-C       = |f_theta − 8| + |f_alpha − 8|   (convergence to 8 Hz)
-```
-
-Spectral centroids computed via Welch PSD (4-second Hann windows, 50%
-overlap) on posterior channels (O1, O2, Oz, P3, P4, Pz).
+| Metric | Value |
+|--------|-------|
+| t(97) | **3.248** |
+| p-value | **0.0016** |
+| Cohen's d | **0.328** |
+| Direction | **61.2%** PCI_rest > PCI_task |
+| Frontal replication | d=0.731, p=1.07×10⁻¹⁰ |
+| Baseline↔ΔPCI | r=0.538 |
+| VERDICT | **SUPPORTED** |
 
 ---
 
 ## Dataset
 
-**PhysioNet EEGBCI Motor/Movement Imagery**
-- URL: https://physionet.org/content/eegmmidb/1.0.0/
-- 109 subjects, 64 channels, 160 Hz
-- Rest: **Run 2 (R02)** = eyes-closed baseline
-- Task: **Runs 3 + 7 (R03, R07)** = motor execution (open/close fists)
-- Secondary: Runs 4, 8 (imagery); Run 1 (eyes-open rest)
+**PhysioNet EEG Motor Movement/Imagery Database (EEGMMIDB)**
+- 109 subjects, 64-channel EEG, 160 Hz
+- Runs: R02 (eyes-closed rest), R03+R07 (motor execution), R04+R08 (motor imagery), R01 (eyes-open)
+- Reference: Goldberger et al. (2000). PhysioBank/PhysioToolkit/PhysioNet.
+- DOI: https://doi.org/10.1161/01.CIR.101.23.e215
 
-**Subjects excluded (task data unavailable):** S003, S009, S022, S054,
-S061, S077, S096 and 4 others — 98/109 subjects with valid paired data.
+## Method
 
----
+1. Load EDF files via MNE Python (`mne.datasets.eegbci`)
+2. Band-pass filter 1–45 Hz (FIR, firwin)
+3. Average re-reference (subtract channel mean per time point)
+4. Epoch into 4-second non-overlapping windows
+5. Artifact rejection: ±150 µV (v3) / ±500 µV (v2)
+6. Welch PSD (nperseg = epoch length, 50% overlap)
+7. Spectral centroids: θ=[4–8 Hz], α=[8–13 Hz]
+8. FOOOF aperiodic correction (R²≥0.85 quality gate)
+9. PCI = (α_centroid/θ_centroid − φ) / φ × 100
+10. Paired t-test + Wilcoxon (rest vs. task, within-subject)
+11. ANCOVA controlling for baseline PCI (regression-to-mean)
+12. Flat-spectrum null: 200 surrogates from FOOOF aperiodic parameters
 
-## Pipeline
+## Files
 
-1. Bandpass filter 1–45 Hz (FIR, `firwin`)
-2. Posterior channel selection (O1/O2/Oz/P3/P4/Pz)
-3. Segment into 4-second epochs; artifact rejection threshold ±500 µV
-   *(raw EEGBCI signals peak at ~300 µV post-filter; the 100 µV threshold
-   in the original pipeline spec rejects all epochs and was amended here)*
-4. PSD via Welch (4 s Hann window, 50% overlap)
-5. Average across clean epochs and posterior channels
-6. Compute spectral centroids → R → PCI
-
----
-
-## Reproducing
-
-```bash
-pip install mne numpy scipy matplotlib pandas diptest
-python worldribbon_v2.py
+```
+worldribbon_v2.py                        # v2 script
+worldribbon_v3.py                        # v3 script (current)
+outputs/worldribbon_v2/
+  worldribbon_v2_data.csv               # v2 per-subject data
+  figures/                              # v2 figures
+outputs/worldribbon_v3/
+  worldribbon_v3_data.csv               # v3 per-subject data (N=41)
+  worldribbon_v3_summary.json           # v3 statistical summary
+  figures/
+    fig1_primary.png                    # PCI rest vs task
+    fig2_fooof.png                      # FOOOF-corrected comparison
+    fig3_null.png                       # Flat-spectrum null model
+    fig4_frontal.png                    # Frontal electrode replication
 ```
 
-MNE will auto-download PhysioNet EEGBCI on first run (~650 MB for all 6
-runs across 109 subjects). Results are cached per-subject in
-`outputs/worldribbon_v2/cache.json` so the script is safely resumable.
+## Interpretation
 
-**Outputs:**
-- `outputs/worldribbon_v2_data.csv` — per-subject metrics
-- `outputs/figures/worldribbon_v2_results.png` — 4-panel figure (300 DPI)
+The Worldribbon project tests whether resting EEG shows greater phi-organisation 
+(α/θ ratio closer to φ=1.618) compared to motor task EEG.
 
----
+**v3 conclusion:** The large raw effect (d=1.072) is a regression-to-mean artifact: 
+subjects with high rest PCI naturally have lower task PCI, and ANCOVA completely 
+removes the effect (p=1.0). The FOOOF-corrected effect is small and non-significant 
+(d=0.193). The 1/f null model shows that rest spectral ratios do cluster differently 
+from pure aperiodic noise (97.6% outside CI), but this likely reflects the well-known 
+theta–alpha peak structure in resting EEG rather than phi-specific organisation.
 
-## Reference
+## License
 
-Ursachi, A.-S. (2026). *Phi-organized neural oscillations: theta–alpha
-frequency ratios as fixed golden-ratio architecture in human EEG.*
-Frontiers in Human Neuroscience. DOI: 10.3389/fnhum.2026.1781338
-
----
-
-## Context
-
-This analysis is a within-subject replication satellite to the Schumann–EEG
-bridge manuscript (Ursachi, in preparation), which demonstrates convergent
-phi-organization in Schumann resonance frequency ratios (r31 ≈ φ²) and EEG
-alpha/theta ratios. The current result — that PCI is higher at rest than
-during motor engagement — is cited in Section 4.3 (Cross-Domain Implications)
-as evidence that phi-organization is a dynamic state property, not a
-fixed architectural constant.
-
----
-
-*Author: Andrei-Sebastian Ursachi, Independent Researcher, Diepholz, Germany*  
-*contact@andreiursachi.eu | ORCID: 0009-0002-6114-5011*
+MIT License. Data: PhysioNet Open Access (CC-BY).
+Author: ExeqTer91
